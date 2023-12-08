@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="..\..\BSP.uproject" />
+    <Filter Include="Source">
+      <UniqueIdentifier>{5EF5D329-151E-496F-BECC-FB2E6422F366}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Source\BSP.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="..\..\Source\BSPEditor.Target.cs">
+      <Filter>Source</Filter>
+    </None>
+    <Filter Include="Config">
+      <UniqueIdentifier>{6C47ACCA-1FC5-47B2-BCD3-BA71BF7F5B14}</UniqueIdentifier>
+    </Filter>
+    <None Include="..\..\Config\DefaultEditor.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultEngine.ini">
+      <Filter>Config</Filter>
+    </None>
+    <None Include="..\..\Config\DefaultGame.ini">
+      <Filter>Config</Filter>
+    </None>
+    <Filter Include="Source\BSP">
+      <UniqueIdentifier>{8B754088-5A34-420B-B100-B8FFD101634C}</UniqueIdentifier>
+    </Filter>
+    <ClCompile Include="..\..\Source\BSP\BinarySpacePartition.cpp">
+      <Filter>Source\BSP</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\BSP\BinarySpacePartition.h">
+      <Filter>Source\BSP</Filter>
+    </ClInclude>
+    <None Include="..\..\Source\BSP\BSP.Build.cs">
+      <Filter>Source\BSP</Filter>
+    </None>
+    <ClCompile Include="..\..\Source\BSP\BSP.cpp">
+      <Filter>Source\BSP</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\BSP\BSP.h">
+      <Filter>Source\BSP</Filter>
+    </ClInclude>
+    <ClCompile Include="..\..\Source\BSP\BSPGameModeBase.cpp">
+      <Filter>Source\BSP</Filter>
+    </ClCompile>
+    <ClInclude Include="..\..\Source\BSP\BSPGameModeBase.h">
+      <Filter>Source\BSP</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

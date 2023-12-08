@@ -1,0 +1,3 @@
+C:\Users\Brendan\Documents\Programming\Unreal\BSP\Intermediate\Build\Win64\UE4Editor\Development\BSP\Definitions.BSP.h
+C:\Program Files\Epic Games\UE_4.27\Engine\Source\Runtime\CoreUObject\Public\UObject/GeneratedCppIncludes.h
+C:\Program Files\Epic Games\UE_4.27\Engine\Source\Runtime\CoreUObject\Public\UObject/MetaData.h

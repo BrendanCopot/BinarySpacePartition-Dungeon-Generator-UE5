@@ -1,0 +1,15 @@
+/NOLOGO
+/errorReport:prompt
+/MACHINE:x64
+/SUBSYSTEM:WINDOWS
+/DEF
+/NAME:"UE4Editor-BSP.dll"
+/IGNORE:4221
+/NODEFAULTLIB
+"C:\Users\Brendan\Documents\Programming\Unreal\BSP\Intermediate\Build\Win64\BSPEditor\Development\Engine\SharedPCH.Engine.ShadowErrors.h.obj"
+"C:\Users\Brendan\Documents\Programming\Unreal\BSP\Intermediate\Build\Win64\UE4Editor\Development\BSP\BSP.cpp.obj"
+"C:\Users\Brendan\Documents\Programming\Unreal\BSP\Intermediate\Build\Win64\UE4Editor\Development\BSP\BSPGameModeBase.cpp.obj"
+"C:\Users\Brendan\Documents\Programming\Unreal\BSP\Intermediate\Build\Win64\UE4Editor\Development\BSP\BSP.init.gen.cpp.obj"
+"C:\Users\Brendan\Documents\Programming\Unreal\BSP\Intermediate\Build\Win64\UE4Editor\Development\BSP\BSPGameModeBase.gen.cpp.obj"
+"C:\Users\Brendan\Documents\Programming\Unreal\BSP\Intermediate\Build\Win64\UE4Editor\Development\BSP\Default.rc2.res"
+/OUT:"C:\Users\Brendan\Documents\Programming\Unreal\BSP\Intermediate\Build\Win64\UE4Editor\Development\BSP\UE4Editor-BSP.lib"
