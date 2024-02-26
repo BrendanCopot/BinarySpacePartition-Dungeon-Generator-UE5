@@ -2,7 +2,7 @@
 
 
 #include "DungeonGenerator.h"
-#include "GridGeneratorComponent.h"
+#include "BinarySpacePartitionComponent.h"
 
 // Sets default values
 ADungeonGenerator::ADungeonGenerator()
@@ -10,7 +10,7 @@ ADungeonGenerator::ADungeonGenerator()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	GridGeneratorComponent = CreateDefaultSubobject<UGridGeneratorComponent>(TEXT("GridGenerator"));
+	BinarySpacePartitionComponent = CreateDefaultSubobject<UBinarySpacePartitionComponent>(TEXT("BinarySpacePartitioner"));
 }
 
 // Called when the game starts or when spawned

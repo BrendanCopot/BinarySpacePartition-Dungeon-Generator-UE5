@@ -2,6 +2,8 @@
 
 
 #include "BinarySpacePartitionComponent.h"
+#include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values for this component's properties
 UBinarySpacePartitionComponent::UBinarySpacePartitionComponent()
@@ -11,6 +13,24 @@ UBinarySpacePartitionComponent::UBinarySpacePartitionComponent()
 	PrimaryComponentTick.bCanEverTick = true;
 
 	// ...
+
+	// Create new UHierarchicalInstancedStaticMeshComponent that holds the mesh instance used for the floor of the dungeon grid.
+	GridMeshInstance = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("GridInstancedMesh"));
+	GridMeshInstance->SetupAttachment(Cast<USceneComponent>(this));
+
+	// Set the Origin of the grid
+	GridOrigin = this->GetComponentLocation();
+
+	// Dynamically load the Static Mesh used for the floor at construction
+	GridMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Game/Art/Debug/SM_GridOutliner"));
+
+	// Safety check ensuring FloorMesh is set before running the next lines of code
+	if (GridMesh != nullptr)
+	{
+		// Set the Mesh Instances static mesh to the static mesh we just loaded
+		GridMeshInstance->SetStaticMesh(GridMesh);
+	}
+	
 }
 
 
@@ -20,9 +40,53 @@ void UBinarySpacePartitionComponent::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
+
+	// Get the width and length of the static mesh, and scale by mesh size variable
+	MeshWidth  = GridMesh->GetBoundingBox().GetSize().X * MeshScale;
+	MeshLength = GridMesh->GetBoundingBox().GetSize().Y * MeshScale;
 	
+	// Clear Previous Instances
+	ClearMeshInstance(GridMeshInstance);
+	
+	// Add new static mesh instances for each cell of the grid
+	for (int i = 0; i < GridRows; i++)
+	{
+		for (int j = 0; j < GridColumns; j++)
+		{
+			const float SpawnPosX = GridOrigin.X + (i + MeshWidth * i);
+			const float SpawnPosY = GridOrigin.Y + (j + MeshLength * j);
+			
+			FVector SpawnPosition = FVector(SpawnPosX, SpawnPosY, 0);
+			FVector Scale = FVector(MeshScale, MeshScale, 1);
+			
+			GridMeshInstance->AddInstance(FTransform(FRotator(0), SpawnPosition, Scale), true);
+
+			GridCellPositions.Add(SpawnPosition); 
+		}
+	}
 }
 
+void UBinarySpacePartitionComponent::Split()
+{
+	if ((double)rand() / RAND_MAX < 0.5)
+	{
+		VerticalSplit();
+	}
+	else
+	{
+		HorizontalSplit();
+	}
+}
+
+void UBinarySpacePartitionComponent::VerticalSplit()
+{
+	UKismetMathLibrary::RandomIntegerInRange(MinimumRoomSizeY, 1);
+}
+
+void UBinarySpacePartitionComponent::HorizontalSplit()
+{
+
+}
 
 // Called every frame
 void UBinarySpacePartitionComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -32,3 +96,9 @@ void UBinarySpacePartitionComponent::TickComponent(float DeltaTime, ELevelTick T
 	// ...
 }
 
+void UBinarySpacePartitionComponent::ClearMeshInstance(UHierarchicalInstancedStaticMeshComponent* MeshInstance)
+{
+	MeshInstance->ClearInstances();
+
+	UE_LOG(LogTemp, Warning, TEXT("Cleared Mesh Instances"));
+}

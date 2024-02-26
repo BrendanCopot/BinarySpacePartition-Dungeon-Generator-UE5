@@ -6,7 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "DungeonGenerator.generated.h"
 
-class UGridGeneratorComponent;
 class UBinarySpacePartitionComponent;
 
 UCLASS()
@@ -23,13 +22,16 @@ protected:
 	virtual void BeginPlay() override;
 
 	// Components 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Components,  meta = (AllowPrivateAccess = "true"))
-	UGridGeneratorComponent* GridGeneratorComponent;
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Components, meta = (AllowPrivateAccess = "true"))
+	UBinarySpacePartitionComponent* BinarySpacePartitionComponent;
+
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	UBinarySpacePartitionComponent* GetBinarySpacePartitionComponent() const { return BinarySpacePartitionComponent; }
 };
 
 
