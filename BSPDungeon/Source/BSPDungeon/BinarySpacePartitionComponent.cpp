@@ -2,8 +2,11 @@
 
 
 #include "BinarySpacePartitionComponent.h"
+
+#include "BinaryRoom.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 // Sets default values for this component's properties
 UBinarySpacePartitionComponent::UBinarySpacePartitionComponent()
@@ -30,7 +33,12 @@ UBinarySpacePartitionComponent::UBinarySpacePartitionComponent()
 		// Set the Mesh Instances static mesh to the static mesh we just loaded
 		GridMeshInstance->SetStaticMesh(GridMesh);
 	}
+
+	// Create the Initial Binary Room using dungeon parameters for left, right, top, and bottom extents of the room
+	InitialBinaryRoom = new BinaryRoom(GridOrigin.X, GridOrigin.X + GridRows * MeshWidth, GridOrigin.Y + GridColumns * MeshHeight, GridOrigin.Y);
 	
+	// Add the Initial Binary Room to the array of binary rooms
+	BinaryRooms.Add(InitialBinaryRoom);
 }
 
 
@@ -43,7 +51,7 @@ void UBinarySpacePartitionComponent::BeginPlay()
 
 	// Get the width and length of the static mesh, and scale by mesh size variable
 	MeshWidth  = GridMesh->GetBoundingBox().GetSize().X * MeshScale;
-	MeshLength = GridMesh->GetBoundingBox().GetSize().Y * MeshScale;
+	MeshHeight = GridMesh->GetBoundingBox().GetSize().Y * MeshScale;
 	
 	// Clear Previous Instances
 	ClearMeshInstance(GridMeshInstance);
@@ -54,7 +62,7 @@ void UBinarySpacePartitionComponent::BeginPlay()
 		for (int j = 0; j < GridColumns; j++)
 		{
 			const float SpawnPosX = GridOrigin.X + (i + MeshWidth * i);
-			const float SpawnPosY = GridOrigin.Y + (j + MeshLength * j);
+			const float SpawnPosY = GridOrigin.Y + (j + MeshHeight * j);
 			
 			FVector SpawnPosition = FVector(SpawnPosX, SpawnPosY, 0);
 			FVector Scale = FVector(MeshScale, MeshScale, 1);
@@ -64,6 +72,15 @@ void UBinarySpacePartitionComponent::BeginPlay()
 			GridCellPositions.Add(SpawnPosition); 
 		}
 	}
+
+	// Bottom Left
+	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), GridOrigin, 100, 12, FLinearColor::Red, 100, 1);
+	// Top Left
+	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), FVector(GridOrigin.X, GridOrigin.Y + GridColumns * MeshHeight, 0), 100, 12, FLinearColor::Red, 100, 1);
+	// Bottom Right
+	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), FVector(GridOrigin.X + GridRows * MeshWidth, GridOrigin.Y , 0), 100, 12, FLinearColor::Red, 100, 1);
+	// Top Right
+	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), FVector(GridOrigin.X + GridRows * MeshWidth, GridOrigin.Y + GridColumns * MeshHeight, 0), 100, 12, FLinearColor::Red, 100, 1);
 }
 
 void UBinarySpacePartitionComponent::Split()

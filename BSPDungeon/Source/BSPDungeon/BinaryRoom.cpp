@@ -6,6 +6,10 @@ BinaryRoom::BinaryRoom(int Left, int Right, int Top, int Bottom)
 	RoomRight = Right;
 	RoomTop = Top;
 	RoomBottom = Bottom;
+
+	Parent = nullptr;
+	LeftLeaf = nullptr;
+	RightLeaf = nullptr;
 }
 
 BinaryRoom::~BinaryRoom()

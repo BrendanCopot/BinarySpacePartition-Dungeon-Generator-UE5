@@ -18,7 +18,7 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	/** GRID VARIABLES **/
 	// The number of rows the grid will generate.
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
-	int GridRows = 10;
+	int GridRows = 100;
 	// The number of columns the grid will generate.
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
 	int GridColumns = 10;
@@ -45,9 +45,9 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	// Default width of the static mesh
 	UPROPERTY(VisibleAnywhere, Category = "Instanced Mesh Variables", meta=(AllowPrivateAccess = "true"))
 	int MeshWidth;
-	// Default length of the static mesh
+	// Default height of the static mesh
 	UPROPERTY(VisibleAnywhere, Category = "Instanced Mesh Variables", meta=(AllowPrivateAccess = "true"))
-	int MeshLength;
+	int MeshHeight;
 	// Mesh instance of the static mesh we are spawning in
 	UPROPERTY(EditDefaultsOnly, Category = "Instanced Mesh Variables", meta=(AllowPrivateAccess = "true"))
 	UHierarchicalInstancedStaticMeshComponent* GridMeshInstance;
@@ -67,7 +67,10 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
 	int RoomTrim = 1;
 
-	//TArray<BinaryRoom> BinaryRooms;
+	TArray<BinaryRoom*> BinaryRooms;
+	BinaryRoom* InitialBinaryRoom;
+	
+
 
 	/** FUNCTIONS **/
 	// Clears the mesh instance of all previous mesh instances
