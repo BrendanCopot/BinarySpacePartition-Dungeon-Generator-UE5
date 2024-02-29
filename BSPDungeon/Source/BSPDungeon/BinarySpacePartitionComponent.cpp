@@ -81,28 +81,62 @@ void UBinarySpacePartitionComponent::BeginPlay()
 	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), FVector(GridOrigin.X + GridRows * MeshWidth, GridOrigin.Y , 0), 100, 12, FLinearColor::Red, 100, 1);
 	// Top Right
 	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), FVector(GridOrigin.X + GridRows * MeshWidth, GridOrigin.Y + GridColumns * MeshHeight, 0), 100, 12, FLinearColor::Red, 100, 1);
+
+	Split(InitialBinaryRoom);
 }
 
-void UBinarySpacePartitionComponent::Split()
+void UBinarySpacePartitionComponent::Split(BinaryRoom* RoomToSplit)
 {
-	if ((double)rand() / RAND_MAX < 0.5)
-	{
-		VerticalSplit();
-	}
+	const auto RandomValue = static_cast<double>(rand()) / RAND_MAX;
+	if ( RandomValue < 0.5)
+		VerticalSplit(RoomToSplit);
 	else
-	{
-		HorizontalSplit();
-	}
+		HorizontalSplit(RoomToSplit);
 }
 
-void UBinarySpacePartitionComponent::VerticalSplit()
+void UBinarySpacePartitionComponent::VerticalSplit(BinaryRoom* RoomToSplit)
 {
-	UKismetMathLibrary::RandomIntegerInRange(MinimumRoomSizeY, 1);
+	UE_LOG(LogTemp, Warning, TEXT("Vertical Split"));
+
+	int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinimumRoomSizeX, GridRows - MinimumRoomSizeX);
+
+	UE_LOG(LogTemp, Warning, TEXT("Min = %d"), MinimumRoomSizeX);
+	UE_LOG(LogTemp, Warning, TEXT("Max = %d"), GridRows - MinimumRoomSizeX);
+	UE_LOG(LogTemp, Warning, TEXT("Split Point = %d"), SplitPoint);
+	
+
+	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), FVector(RoomToSplit->GetRoomLeft() + SplitPoint * MeshWidth, RoomToSplit->GetRoomBottom() + GridColumns * MeshHeight, 0), 100, 12, FLinearColor::Red, 100, 1);
+	
+	BinaryRoom* LeftLeaf = new BinaryRoom(GridOrigin.X, GridOrigin.X + GridRows * MeshWidth, GridOrigin.Y + GridColumns * MeshHeight, GridOrigin.Y);
+	BinaryRoom* RightLeaf = new BinaryRoom(GridOrigin.X, GridOrigin.X + GridRows * MeshWidth, GridOrigin.Y + GridColumns * MeshHeight, GridOrigin.Y);
+
+	RoomToSplit->SetLeftLeaf(LeftLeaf);
+	RoomToSplit->SetRightLeaf(RightLeaf);
+	
+	LeftLeaf->SetParent(RoomToSplit);
+	RightLeaf->SetParent(RoomToSplit);
 }
 
-void UBinarySpacePartitionComponent::HorizontalSplit()
+void UBinarySpacePartitionComponent::HorizontalSplit(BinaryRoom* RoomToSplit)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Horixontal Split"));
+	
+	int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinimumRoomSizeY, GridColumns - MinimumRoomSizeY);
 
+	UE_LOG(LogTemp, Warning, TEXT("Min = %d"), MinimumRoomSizeY);
+	UE_LOG(LogTemp, Warning, TEXT("Max = %d"), GridColumns - MinimumRoomSizeY);
+	UE_LOG(LogTemp, Warning, TEXT("Split Point = %d"), SplitPoint);
+    
+	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), FVector(RoomToSplit->GetRoomLeft(), RoomToSplit->GetRoomBottom() + SplitPoint * MeshHeight, 0), 100, 12, FLinearColor::Red, 100, 1);
+    	
+	BinaryRoom* LeftLeaf = new BinaryRoom(GridOrigin.X, GridOrigin.X + GridRows * MeshWidth, GridOrigin.Y + GridColumns * MeshHeight, GridOrigin.Y);
+	BinaryRoom* RightLeaf = new BinaryRoom(GridOrigin.X, GridOrigin.X + GridRows * MeshWidth, GridOrigin.Y + GridColumns * MeshHeight, GridOrigin.Y);
+    
+    RoomToSplit->SetLeftLeaf(LeftLeaf);
+    RoomToSplit->SetRightLeaf(RightLeaf);
+    	
+	LeftLeaf->SetParent(RoomToSplit);
+	RightLeaf->SetParent(RoomToSplit);
 }
 
 // Called every frame

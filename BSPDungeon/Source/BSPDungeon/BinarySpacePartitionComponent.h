@@ -70,8 +70,6 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	TArray<BinaryRoom*> BinaryRooms;
 	BinaryRoom* InitialBinaryRoom;
 	
-
-
 	/** FUNCTIONS **/
 	// Clears the mesh instance of all previous mesh instances
 	static void ClearMeshInstance(UHierarchicalInstancedStaticMeshComponent* MeshInstance);
@@ -84,11 +82,11 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	void Split();
+	void Split(BinaryRoom* RoomToSplit);
 
-	void VerticalSplit();
+	void VerticalSplit(BinaryRoom* RoomToSplit);
 
-	void HorizontalSplit();
+	void HorizontalSplit(BinaryRoom* RoomToSplit);
 
 public:	
 	// Called every frame
