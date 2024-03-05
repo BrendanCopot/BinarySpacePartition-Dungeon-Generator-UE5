@@ -18,7 +18,7 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	/** GRID VARIABLES **/
 	// The number of rows the grid will generate.
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
-	int GridRows = 100;
+	int GridRows = 20;
 	// The number of columns the grid will generate.
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
 	int GridColumns = 10;
@@ -68,6 +68,7 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	int RoomTrim = 1;
 
 	TArray<BinaryRoom*> BinaryRooms;
+	TArray<BinaryRoom*> RoomSplitQueue;
 	BinaryRoom* InitialBinaryRoom;
 	
 	/** FUNCTIONS **/
@@ -82,7 +83,7 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	void Split(BinaryRoom* RoomToSplit);
+	void Split();
 
 	void VerticalSplit(BinaryRoom* RoomToSplit);
 

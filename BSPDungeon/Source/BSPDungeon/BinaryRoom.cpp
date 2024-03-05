@@ -1,15 +1,10 @@
 ﻿#include "BinaryRoom.h"
 
-BinaryRoom::BinaryRoom(int Left, int Right, int Top, int Bottom)
+BinaryRoom::BinaryRoom(int Rows, int Cols, FVector Origin)
 {
-	RoomLeft = Left;
-	RoomRight = Right;
-	RoomTop = Top;
-	RoomBottom = Bottom;
-
-	Parent = nullptr;
-	LeftLeaf = nullptr;
-	RightLeaf = nullptr;
+	RoomRows = Rows;
+	RoomCols = Cols;
+	RoomOrigin = Origin;
 }
 
 BinaryRoom::~BinaryRoom()

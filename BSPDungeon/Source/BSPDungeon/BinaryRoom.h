@@ -2,45 +2,31 @@
 
 class BinaryRoom
 {
-	// The value of the current room's left bound
-	int RoomLeft;
-	// The value of the current room's right bound
-	int RoomRight;
-	// The value of the current room's top bound
-	int RoomTop;
-	// The value of the current room's bottom bound
-	int RoomBottom;
-
 	// The current room's width
-	int RoomWidth = RoomRight - RoomLeft;
+	int RoomRows;
 	// The current room's height
-	int RoomHeight = RoomTop - RoomBottom;
+	int RoomCols;
+	// The location in world space of the current room
+	FVector RoomOrigin;
 
 	// Binary Tree Variables
 	// The current room's parent room
-	BinaryRoom* Parent;
+	BinaryRoom* Parent = nullptr;
 	// The current room's left leaf after being split
-	BinaryRoom* LeftLeaf;
+	BinaryRoom* LeftLeaf = nullptr;
 	// The current room's right leaf after being split
-	BinaryRoom* RightLeaf;
+	BinaryRoom* RightLeaf = nullptr;
 	
 public:
-
-	BinaryRoom(int Left, int Right, int Top, int Bottom);
+	BinaryRoom(int Rows, int Cols, FVector Origin);
 	~BinaryRoom();
-	
-	// Returns the current room's left bound
-	int GetRoomLeft()	const { return RoomLeft; }
-	// Returns the current room's right bound
-	int GetRoomRight()	const { return RoomRight; }
-	// Returns the current room's top bound
-	int GetRoomTop()	const { return RoomTop; }
-	// Returns the current room's bottom bound
-	int GetRoomBottom()	const { return RoomBottom; }
-	// Returns the width of the current room
-	int GetRoomWidth()	const { return RoomWidth; }
-	// Returns the height of the current room
-	int GetRoomHeight()	const { return RoomHeight; }
+
+	// Returns the width of the current room as number of rows
+	int GetRoomWidth()	const { return RoomRows; }
+	// Returns the height of the current room as number of columns
+	int GetRoomHeight()	const { return RoomCols; }
+	// Returns the location in world space of the current room
+	FVector GetRoomOrigin() const { return RoomOrigin; }
 	
 	// Returns the current room's parent
 	BinaryRoom* GetParent()		const { return Parent; }
@@ -51,7 +37,7 @@ public:
 
 	// Sets the parent room of the current room 
 	void SetParent(BinaryRoom* NewParent)		{ Parent = NewParent; }
-	// Sets the left leaf of the current room 
+	// Sets the left leaf of the current room
 	void SetLeftLeaf(BinaryRoom* NewLeftLeaf)	{ LeftLeaf = NewLeftLeaf; }
 	// Sets the right leaf of the current room 
 	void SetRightLeaf(BinaryRoom* NewRightLeaf) { RightLeaf = NewRightLeaf; }
