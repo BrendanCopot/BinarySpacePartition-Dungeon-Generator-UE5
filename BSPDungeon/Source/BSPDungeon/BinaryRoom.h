@@ -16,6 +16,9 @@ class BinaryRoom
 	BinaryRoom* LeftLeaf = nullptr;
 	// The current room's right leaf after being split
 	BinaryRoom* RightLeaf = nullptr;
+
+	// Variable to determine if a room is able to be split
+	bool bCanSplit = true;
 	
 public:
 	BinaryRoom(int Rows, int Cols, FVector Origin);

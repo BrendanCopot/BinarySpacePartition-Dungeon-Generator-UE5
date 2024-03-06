@@ -66,6 +66,8 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	int MaximumRoomSizeY = 8;
 	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
 	int RoomTrim = 1;
+	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
+	int MaxRooms = 10;
 
 	TArray<BinaryRoom*> BinaryRooms;
 	TArray<BinaryRoom*> RoomSplitQueue;

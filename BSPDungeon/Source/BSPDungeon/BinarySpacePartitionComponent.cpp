@@ -5,6 +5,7 @@
 
 #include "BinaryRoom.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
@@ -14,8 +15,6 @@ UBinarySpacePartitionComponent::UBinarySpacePartitionComponent()
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
-
-	// ...
 
 	// Create new UHierarchicalInstancedStaticMeshComponent that holds the mesh instance used for the floor of the dungeon grid.
 	GridMeshInstance = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("GridInstancedMesh"));
@@ -48,8 +47,6 @@ void UBinarySpacePartitionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// ...
-
 	// Get the width and height of the static mesh, and scale by MeshScale variable
 	MeshWidth  = GridMesh->GetBoundingBox().GetSize().X * MeshScale;
 	MeshHeight = GridMesh->GetBoundingBox().GetSize().Y * MeshScale;
@@ -59,12 +56,11 @@ void UBinarySpacePartitionComponent::BeginPlay()
 
 	Split();
 	
-	// Add new static mesh instances for each cell of the grid
-	for (int32 Index = 0; Index < BinaryRooms.Num(); ++Index)
+	// Add new static mesh instances for each cell of each room
+	for (int Index = 0; Index < BinaryRooms.Num(); Index++)
 	{
-		// Access array element
-		const BinaryRoom* Room = BinaryRooms[Index];
-		// Modify Element as needed
+		const BinaryRoom* Room = BinaryRooms[Index];		
+		
 		for (int i = 0; i < Room->GetRoomWidth(); i++)
 		{
 			for (int j = 0; j < Room->GetRoomHeight(); j++)
@@ -81,7 +77,6 @@ void UBinarySpacePartitionComponent::BeginPlay()
 			}
 		}
 	}
-
 	
 	// Bottom Left
 	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), GridOrigin, 100, 12, FLinearColor::Red, 100, 1);
@@ -95,12 +90,12 @@ void UBinarySpacePartitionComponent::BeginPlay()
 
 void UBinarySpacePartitionComponent::Split()
 {
-	while (!RoomSplitQueue.IsEmpty())
+	for (int Index = 0; Index < RoomSplitQueue.Num(); Index++)
 	{
-		for (int32 Index = 0; Index < BinaryRooms.Num(); ++Index)
-		{
-			BinaryRoom* Room = BinaryRooms[Index];
+		BinaryRoom* Room = RoomSplitQueue[Index];
 
+		if (BinaryRooms.Num() < MaxRooms)
+		{
 			const auto RandomValue = static_cast<double>(rand()) / RAND_MAX;
 			if ( RandomValue < 0.5)
 				VerticalSplit(Room);
@@ -108,20 +103,28 @@ void UBinarySpacePartitionComponent::Split()
 				HorizontalSplit(Room);
 		}
 	}
-	
+
+	if (!RoomSplitQueue.IsEmpty())
+		Split();
 }
 
 void UBinarySpacePartitionComponent::VerticalSplit(BinaryRoom* RoomToSplit)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Vertical Split"));
 
+	// Remove RoomToSplit from RoomSplitQueue if it exists
+	RoomSplitQueue.Remove(RoomToSplit);
+	
 	const int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinimumRoomSizeX, RoomToSplit->GetRoomWidth() - MinimumRoomSizeX);
+
+	if (SplitPoint <= MinimumRoomSizeX)
+		return;
+
+	// Remove RoomToSplit if it exists
+	BinaryRooms.Remove(RoomToSplit);
 
 	UE_LOG(LogTemp, Warning, TEXT("Width = %d"), RoomToSplit->GetRoomWidth());
 	UE_LOG(LogTemp, Warning, TEXT("Height = %d"), RoomToSplit->GetRoomHeight());
-	
-	UE_LOG(LogTemp, Warning, TEXT("Min = %d"), MinimumRoomSizeX);
-	UE_LOG(LogTemp, Warning, TEXT("Max = %d"), RoomToSplit->GetRoomWidth() - MinimumRoomSizeX);
 	UE_LOG(LogTemp, Warning, TEXT("Split Point = %d"), SplitPoint);
 	
 	const FVector RightOrigin = FVector(RoomToSplit->GetRoomOrigin().X + SplitPoint * MeshWidth , RoomToSplit->GetRoomOrigin().Y, 0);
@@ -131,10 +134,7 @@ void UBinarySpacePartitionComponent::VerticalSplit(BinaryRoom* RoomToSplit)
 	
 	BinaryRoom* LeftLeaf  = new BinaryRoom(SplitPoint, RoomToSplit->GetRoomHeight(), RoomToSplit->GetRoomOrigin());
 	BinaryRoom* RightLeaf = new BinaryRoom(RoomToSplit->GetRoomWidth() - SplitPoint, RoomToSplit->GetRoomHeight(), RightOrigin);
-
-	// Remove RoomToSplit if it exists
-	BinaryRooms.Remove(RoomToSplit);
-
+	
 	// Add LeftLeaf and RightLeaf if they don't exist in BinaryRooms
 	if (!BinaryRooms.Contains(LeftLeaf))
 		BinaryRooms.Add(LeftLeaf);
@@ -153,21 +153,28 @@ void UBinarySpacePartitionComponent::VerticalSplit(BinaryRoom* RoomToSplit)
 	if (!RightLeaf->HasParent())
 		RightLeaf->SetParent(RoomToSplit);
 
-	// Remove RoomToSplit from RoomSplitQueue if it exists
-	RoomSplitQueue.Remove(RoomToSplit);
+	// Add LeftLeaf and RightLeaf to RoomSplitQueue
+	RoomSplitQueue.Add(LeftLeaf);
+	RoomSplitQueue.Add(RightLeaf);
 }
 
 void UBinarySpacePartitionComponent::HorizontalSplit(BinaryRoom* RoomToSplit)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Horixontal Split"));
 	
+	// Remove RoomToSplit from RoomSplitQueue if it exists
+	RoomSplitQueue.Remove(RoomToSplit);
+	
 	const int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinimumRoomSizeY, RoomToSplit->GetRoomHeight() - MinimumRoomSizeY);
 
+	if (SplitPoint <= MinimumRoomSizeY)
+		return;
+
+	// Remove RoomToSplit if it exists
+	BinaryRooms.Remove(RoomToSplit);
+	
 	UE_LOG(LogTemp, Warning, TEXT("Width = %d"), RoomToSplit->GetRoomWidth());
 	UE_LOG(LogTemp, Warning, TEXT("Height = %d"), RoomToSplit->GetRoomHeight());
-	
-	UE_LOG(LogTemp, Warning, TEXT("Min = %d"), MinimumRoomSizeY);
-	UE_LOG(LogTemp, Warning, TEXT("Max = %d"), RoomToSplit->GetRoomHeight() - MinimumRoomSizeY);
 	UE_LOG(LogTemp, Warning, TEXT("Split Point = %d"), SplitPoint);
 
 	const FVector UpOrigin = FVector(RoomToSplit->GetRoomOrigin().X, RoomToSplit->GetRoomOrigin().Y + SplitPoint * MeshHeight, 0);
@@ -175,12 +182,9 @@ void UBinarySpacePartitionComponent::HorizontalSplit(BinaryRoom* RoomToSplit)
 	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), RoomToSplit->GetRoomOrigin(),150, 12, FLinearColor::Blue, 100, 1);
 	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), UpOrigin,150, 12, FLinearColor::Blue, 100, 1);
 
-	BinaryRoom* LeftLeaf  = new BinaryRoom(SplitPoint, RoomToSplit->GetRoomHeight(), RoomToSplit->GetRoomOrigin());
-	BinaryRoom* RightLeaf = new BinaryRoom(RoomToSplit->GetRoomWidth() - SplitPoint, RoomToSplit->GetRoomHeight(), UpOrigin);
-
-	// Remove RoomToSplit if it exists
-	BinaryRooms.Remove(RoomToSplit);
-
+	BinaryRoom* LeftLeaf  = new BinaryRoom(RoomToSplit->GetRoomWidth(), SplitPoint, RoomToSplit->GetRoomOrigin());
+	BinaryRoom* RightLeaf = new BinaryRoom(RoomToSplit->GetRoomWidth(), RoomToSplit->GetRoomHeight() - SplitPoint, UpOrigin);
+	
 	// Add LeftLeaf and RightLeaf if they don't exist in BinaryRooms
 	if (!BinaryRooms.Contains(LeftLeaf))
 		BinaryRooms.Add(LeftLeaf);
@@ -199,8 +203,9 @@ void UBinarySpacePartitionComponent::HorizontalSplit(BinaryRoom* RoomToSplit)
 	if (!RightLeaf->HasParent())
 		RightLeaf->SetParent(RoomToSplit);
 
-	// Remove RoomToSplit from RoomSplitQueue if it exists
-	RoomSplitQueue.Remove(RoomToSplit);
+	// Add LeftLeaf and RightLeaf to RoomSplitQueue
+	RoomSplitQueue.Add(LeftLeaf);
+	RoomSplitQueue.Add(RightLeaf);
 }
 
 // Called every frame
@@ -214,6 +219,6 @@ void UBinarySpacePartitionComponent::TickComponent(float DeltaTime, ELevelTick T
 void UBinarySpacePartitionComponent::ClearMeshInstance(UHierarchicalInstancedStaticMeshComponent* MeshInstance)
 {
 	MeshInstance->ClearInstances();
-
+	
 	UE_LOG(LogTemp, Warning, TEXT("Cleared Mesh Instances"));
 }
