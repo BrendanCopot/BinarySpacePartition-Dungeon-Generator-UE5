@@ -30,6 +30,8 @@ public:
 	int GetRoomHeight()	const { return RoomCols; }
 	// Returns the location in world space of the current room
 	FVector GetRoomOrigin() const { return RoomOrigin; }
+	// Returns the state of the bCanSplit variable
+	bool GetCanSplit() const { return bCanSplit; }
 	
 	// Returns the current room's parent
 	BinaryRoom* GetParent()		const { return Parent; }
@@ -44,6 +46,8 @@ public:
 	void SetLeftLeaf(BinaryRoom* NewLeftLeaf)	{ LeftLeaf = NewLeftLeaf; }
 	// Sets the right leaf of the current room 
 	void SetRightLeaf(BinaryRoom* NewRightLeaf) { RightLeaf = NewRightLeaf; }
+	// Sets the state of the bCanSplit variable
+	void SetCanSplit(const bool State) { bCanSplit = State; }
 
 	// Returns true if the current rooms parent is not nullptr
 	bool HasParent()	const { return Parent != nullptr; }

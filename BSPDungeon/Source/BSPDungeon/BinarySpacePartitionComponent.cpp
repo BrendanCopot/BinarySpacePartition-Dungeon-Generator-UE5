@@ -60,10 +60,10 @@ void UBinarySpacePartitionComponent::BeginPlay()
 	for (int Index = 0; Index < BinaryRooms.Num(); Index++)
 	{
 		const BinaryRoom* Room = BinaryRooms[Index];		
-		
-		for (int i = 0; i < Room->GetRoomWidth(); i++)
+			
+		for (int i = RoomTrim; i < Room->GetRoomWidth() - RoomTrim; i++)
 		{
-			for (int j = 0; j < Room->GetRoomHeight(); j++)
+			for (int j = RoomTrim; j < Room->GetRoomHeight() - RoomTrim; j++)
 			{
 				const float SpawnPosX = Room->GetRoomOrigin().X + (i + MeshWidth * i);
 				const float SpawnPosY = Room->GetRoomOrigin().Y + (j + MeshHeight * j);
@@ -94,13 +94,23 @@ void UBinarySpacePartitionComponent::Split()
 	{
 		BinaryRoom* Room = RoomSplitQueue[Index];
 
+		const auto RandomValue = static_cast<double>(rand()) / RAND_MAX;
+		if ( RandomValue < 0.5)
+		{
+				
+			VerticalSplit(Room);
+				
+		}
+		else
+		{
+			HorizontalSplit(Room);
+			
+		}
+		
 		if (BinaryRooms.Num() < MaxRooms)
 		{
-			const auto RandomValue = static_cast<double>(rand()) / RAND_MAX;
-			if ( RandomValue < 0.5)
-				VerticalSplit(Room);
-			else
-				HorizontalSplit(Room);
+			
+				
 		}
 	}
 
@@ -116,10 +126,10 @@ void UBinarySpacePartitionComponent::VerticalSplit(BinaryRoom* RoomToSplit)
 	RoomSplitQueue.Remove(RoomToSplit);
 	
 	const int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinimumRoomSizeX, RoomToSplit->GetRoomWidth() - MinimumRoomSizeX);
-
+	
 	if (SplitPoint <= MinimumRoomSizeX)
 		return;
-
+	
 	// Remove RoomToSplit if it exists
 	BinaryRooms.Remove(RoomToSplit);
 
@@ -166,7 +176,7 @@ void UBinarySpacePartitionComponent::HorizontalSplit(BinaryRoom* RoomToSplit)
 	RoomSplitQueue.Remove(RoomToSplit);
 	
 	const int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinimumRoomSizeY, RoomToSplit->GetRoomHeight() - MinimumRoomSizeY);
-
+	
 	if (SplitPoint <= MinimumRoomSizeY)
 		return;
 

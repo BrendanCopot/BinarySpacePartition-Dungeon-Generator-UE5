@@ -18,10 +18,10 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	/** GRID VARIABLES **/
 	// The number of rows the grid will generate.
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
-	int GridRows = 20;
+	int GridRows = 50;
 	// The number of columns the grid will generate.
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
-	int GridColumns = 10;
+	int GridColumns = 80;
 	// The number of layers the grid will generate
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
 	int GridLayers = 1;
