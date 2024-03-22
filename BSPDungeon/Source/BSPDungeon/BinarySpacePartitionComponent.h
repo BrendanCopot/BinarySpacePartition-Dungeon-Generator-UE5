@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
+#include "Containers/CircularQueue.h"
 #include "BinarySpacePartitionComponent.generated.h"
 
 class BinaryRoom;
@@ -18,10 +19,10 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	/** GRID VARIABLES **/
 	// The number of rows the grid will generate.
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
-	int GridRows = 50;
+	int GridRows = 30;
 	// The number of columns the grid will generate.
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
-	int GridColumns = 80;
+	int GridColumns = 35;
 	// The number of layers the grid will generate
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
 	int GridLayers = 1;
@@ -57,20 +58,14 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	
 	/** BINARY SPACE PARTITION VARIABLES **/
 	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
-	int MinimumRoomSizeX = 4;
-	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
-	int MaximumRoomSizeX = 8;
-	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
-	int MinimumRoomSizeY = 4;
-	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
-	int MaximumRoomSizeY = 8;
-	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
 	int RoomTrim = 1;
 	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
-	int MaxRooms = 10;
-
-	TArray<BinaryRoom*> BinaryRooms;
-	TArray<BinaryRoom*> RoomSplitQueue;
+	int MinRoomSizeX = 4 + RoomTrim;
+	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
+	int MinRoomSizeY = 6 + RoomTrim;
+	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
+	int MaxRooms = 500;
+	
 	BinaryRoom* InitialBinaryRoom;
 	
 	/** FUNCTIONS **/
@@ -85,15 +80,14 @@ protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
 
-	void Split();
+	void BSPSplit();
+	void DrawInstancedMesh(TArray<BinaryRoom*>& BinaryRoomsArray);
 
-	void VerticalSplit(BinaryRoom* RoomToSplit);
+	void VerticalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue);
 
-	void HorizontalSplit(BinaryRoom* RoomToSplit);
+	void HorizontalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue);
 
 public:	
 	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-		
+	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;		
 };

@@ -5,11 +5,10 @@
 
 #include "BinaryRoom.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
-#include "Kismet/KismetMaterialLibrary.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Kismet/KismetSystemLibrary.h"
 
-// Sets default values for this component's properties
+// Sets default values for this component's properties.
 UBinarySpacePartitionComponent::UBinarySpacePartitionComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
@@ -20,202 +19,146 @@ UBinarySpacePartitionComponent::UBinarySpacePartitionComponent()
 	GridMeshInstance = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>(TEXT("GridInstancedMesh"));
 	GridMeshInstance->SetupAttachment(Cast<USceneComponent>(this));
 
-	// Set the Origin of the grid
+	// Set the Origin of the grid.
 	GridOrigin = this->GetComponentLocation();
 
-	// Dynamically load the Static Mesh used for the floor at construction
+	// Dynamically load the Static Mesh used for the floor at construction.
 	GridMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Game/Art/Debug/SM_GridOutliner"));
 
-	// Safety check ensuring FloorMesh is set before running the next lines of code
+	// Safety check ensuring FloorMesh is set before running the next lines of code.
 	if (GridMesh != nullptr)
 	{
-		// Set the Mesh Instances static mesh to the static mesh we just loaded
+		// Set the Mesh Instances static mesh to the static mesh we just loaded.
 		GridMeshInstance->SetStaticMesh(GridMesh);
 	}
-
-	// Create the Initial Binary Room using dungeon parameters for left, right, top, and bottom extents of the room
-	InitialBinaryRoom = new BinaryRoom(GridRows, GridColumns, GridOrigin);
-	
-	// Add the Initial Binary Room to the array of binary rooms and RoomSplitQueue
-	BinaryRooms.Add(InitialBinaryRoom);
-	RoomSplitQueue.Add(InitialBinaryRoom);
 }
 
 
-// Called when the game starts
+// Called when the game starts.
 void UBinarySpacePartitionComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Get the width and height of the static mesh, and scale by MeshScale variable
+	// Get the width and height of the static mesh, and scale by MeshScale variable.
 	MeshWidth  = GridMesh->GetBoundingBox().GetSize().X * MeshScale;
 	MeshHeight = GridMesh->GetBoundingBox().GetSize().Y * MeshScale;
 	
-	// Clear Previous Instances
+	// Clear Previous Instances.
 	ClearMeshInstance(GridMeshInstance);
 
-	Split();
+	BSPSplit();
+}
+
+void UBinarySpacePartitionComponent::BSPSplit()
+{
+	// Create the Initial Binary Room using dungeon parameters for GridRows, GridColumns, and GridOrigin
+	InitialBinaryRoom = new BinaryRoom(GridRows, GridColumns, GridOrigin);
+
+	// Queue of rooms that still need to be split
+	TQueue<BinaryRoom*> RoomSplitQueue;
+	// Array of rooms after they can no longer be split
+	TArray<BinaryRoom*> BinaryRooms;
 	
-	// Add new static mesh instances for each cell of each room
-	for (int Index = 0; Index < BinaryRooms.Num(); Index++)
+	// Add the Initial Binary Room to the array of binary rooms and RoomSplitQueue.
+	RoomSplitQueue.Enqueue(InitialBinaryRoom);
+
+	while (!RoomSplitQueue.IsEmpty())
 	{
-		const BinaryRoom* Room = BinaryRooms[Index];		
-			
+		BinaryRoom* Room;
+		RoomSplitQueue.Dequeue(Room);
+
+		if (Room->GetRoomWidth() >= MinRoomSizeX && Room->GetRoomHeight() >= MinRoomSizeY)
+		{
+			// Randomly split horizontally or vertically
+			const auto RandomValue = static_cast<double>(rand()) / RAND_MAX;
+			if (RandomValue < 0.5)
+			{
+				if (Room->GetRoomHeight() >= MinRoomSizeY * 2)
+					HorizontalSplit(Room, RoomSplitQueue);
+				else if (Room->GetRoomWidth() >= MinRoomSizeX * 2)
+					VerticalSplit(Room, RoomSplitQueue);
+				else
+					BinaryRooms.Add(Room);
+			}
+			else
+			{
+				if (Room->GetRoomWidth() >= MinRoomSizeX * 2)
+					VerticalSplit(Room, RoomSplitQueue);
+				else if (Room->GetRoomHeight() >= MinRoomSizeY * 2)
+					HorizontalSplit(Room, RoomSplitQueue);
+				else
+					BinaryRooms.Add(Room);
+			}
+		}
+	}
+
+	DrawInstancedMesh(BinaryRooms);
+}
+
+void UBinarySpacePartitionComponent::DrawInstancedMesh(TArray<BinaryRoom*>& BinaryRoomsArray)
+{
+	// Iterate through BinaryRooms array.
+	for (int Index = 0; Index < BinaryRoomsArray.Num(); Index++)
+	{
+		// Retrieve a pointer to the current room.
+		const BinaryRoom* Room = BinaryRoomsArray[Index];		
+
+		// Iterate through each cell of the room using rows and columns.
 		for (int i = RoomTrim; i < Room->GetRoomWidth() - RoomTrim; i++)
 		{
 			for (int j = RoomTrim; j < Room->GetRoomHeight() - RoomTrim; j++)
 			{
+				// Calculate the spawn position of the static mesh instance within the room.
+				// The position is determined based on the room's origin, mesh width, height, and iteration indices.
 				const float SpawnPosX = Room->GetRoomOrigin().X + (i + MeshWidth * i);
 				const float SpawnPosY = Room->GetRoomOrigin().Y + (j + MeshHeight * j);
-			
+
+				// Create a vector representing the spawn position.
 				FVector SpawnPosition = FVector(SpawnPosX, SpawnPosY, 0);
+				// Define the scale of the static mesh instance.
 				FVector Scale = FVector(MeshScale, MeshScale, 1);
-			
+
+				// Add an instance of the static mesh to the grid at the calculated position and scale.
+				// The instance is added to the GridMeshInstance object.
 				GridMeshInstance->AddInstance(FTransform(FRotator(0), SpawnPosition, Scale), true);
 
+				// Store the spawn position of the current cell for future reference.
 				GridCellPositions.Add(SpawnPosition); 
 			}
 		}
 	}
-	
-	// Bottom Left
-	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), GridOrigin, 100, 12, FLinearColor::Red, 100, 1);
-	// Top Left
-	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), FVector(GridOrigin.X, GridOrigin.Y + GridColumns * MeshHeight, 0), 100, 12, FLinearColor::Red, 100, 1);
-	// Bottom Right
-	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), FVector(GridOrigin.X + GridRows * MeshWidth, GridOrigin.Y , 0), 100, 12, FLinearColor::Red, 100, 1);
-	// Top Right
-	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), FVector(GridOrigin.X + GridRows * MeshWidth, GridOrigin.Y + GridColumns * MeshHeight, 0), 100, 12, FLinearColor::Red, 100, 1);
 }
 
-void UBinarySpacePartitionComponent::Split()
-{
-	for (int Index = 0; Index < RoomSplitQueue.Num(); Index++)
-	{
-		BinaryRoom* Room = RoomSplitQueue[Index];
-
-		const auto RandomValue = static_cast<double>(rand()) / RAND_MAX;
-		if ( RandomValue < 0.5)
-		{
-				
-			VerticalSplit(Room);
-				
-		}
-		else
-		{
-			HorizontalSplit(Room);
-			
-		}
-		
-		if (BinaryRooms.Num() < MaxRooms)
-		{
-			
-				
-		}
-	}
-
-	if (!RoomSplitQueue.IsEmpty())
-		Split();
-}
-
-void UBinarySpacePartitionComponent::VerticalSplit(BinaryRoom* RoomToSplit)
+void UBinarySpacePartitionComponent::VerticalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Vertical Split"));
-
-	// Remove RoomToSplit from RoomSplitQueue if it exists
-	RoomSplitQueue.Remove(RoomToSplit);
 	
-	const int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinimumRoomSizeX, RoomToSplit->GetRoomWidth() - MinimumRoomSizeX);
+	const int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinRoomSizeX, RoomToSplit->GetRoomWidth() - MinRoomSizeX);
 	
-	if (SplitPoint <= MinimumRoomSizeX)
-		return;
-	
-	// Remove RoomToSplit if it exists
-	BinaryRooms.Remove(RoomToSplit);
-
-	UE_LOG(LogTemp, Warning, TEXT("Width = %d"), RoomToSplit->GetRoomWidth());
-	UE_LOG(LogTemp, Warning, TEXT("Height = %d"), RoomToSplit->GetRoomHeight());
-	UE_LOG(LogTemp, Warning, TEXT("Split Point = %d"), SplitPoint);
-	
-	const FVector RightOrigin = FVector(RoomToSplit->GetRoomOrigin().X + SplitPoint * MeshWidth , RoomToSplit->GetRoomOrigin().Y, 0);
-
-	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), RoomToSplit->GetRoomOrigin(),150, 12, FLinearColor::Blue, 100, 1);
-	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), RightOrigin,150, 12, FLinearColor::Blue, 100, 1);
+	const FVector RightOrigin = FVector(RoomToSplit->GetRoomOrigin().X + (RoomTrim + SplitPoint) * MeshWidth , RoomToSplit->GetRoomOrigin().Y, 0);
 	
 	BinaryRoom* LeftLeaf  = new BinaryRoom(SplitPoint, RoomToSplit->GetRoomHeight(), RoomToSplit->GetRoomOrigin());
 	BinaryRoom* RightLeaf = new BinaryRoom(RoomToSplit->GetRoomWidth() - SplitPoint, RoomToSplit->GetRoomHeight(), RightOrigin);
-	
-	// Add LeftLeaf and RightLeaf if they don't exist in BinaryRooms
-	if (!BinaryRooms.Contains(LeftLeaf))
-		BinaryRooms.Add(LeftLeaf);
-	if (!BinaryRooms.Contains(RightLeaf))
-		BinaryRooms.Add(RightLeaf);
-
-	// Set LeftLeaf and RightLeaf as children of RoomToSplit if they are not already
-	if (!RoomToSplit->HasLeftLeaf())
-		RoomToSplit->SetLeftLeaf(LeftLeaf);
-	if (!RoomToSplit->HasRightLeaf())
-		RoomToSplit->SetRightLeaf(RightLeaf);
-
-	// Set RoomToSplit as the parent of LeftLeaf and RightLeaf if they don't have one
-	if (!LeftLeaf->HasParent())
-		LeftLeaf->SetParent(RoomToSplit);
-	if (!RightLeaf->HasParent())
-		RightLeaf->SetParent(RoomToSplit);
 
 	// Add LeftLeaf and RightLeaf to RoomSplitQueue
-	RoomSplitQueue.Add(LeftLeaf);
-	RoomSplitQueue.Add(RightLeaf);
+	RoomsQueue.Enqueue(LeftLeaf);
+	RoomsQueue.Enqueue(RightLeaf);
 }
 
-void UBinarySpacePartitionComponent::HorizontalSplit(BinaryRoom* RoomToSplit)
+void UBinarySpacePartitionComponent::HorizontalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Horixontal Split"));
 	
-	// Remove RoomToSplit from RoomSplitQueue if it exists
-	RoomSplitQueue.Remove(RoomToSplit);
+	const int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinRoomSizeY, RoomToSplit->GetRoomHeight() - MinRoomSizeY);
 	
-	const int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinimumRoomSizeY, RoomToSplit->GetRoomHeight() - MinimumRoomSizeY);
-	
-	if (SplitPoint <= MinimumRoomSizeY)
-		return;
-
-	// Remove RoomToSplit if it exists
-	BinaryRooms.Remove(RoomToSplit);
-	
-	UE_LOG(LogTemp, Warning, TEXT("Width = %d"), RoomToSplit->GetRoomWidth());
-	UE_LOG(LogTemp, Warning, TEXT("Height = %d"), RoomToSplit->GetRoomHeight());
-	UE_LOG(LogTemp, Warning, TEXT("Split Point = %d"), SplitPoint);
-
-	const FVector UpOrigin = FVector(RoomToSplit->GetRoomOrigin().X, RoomToSplit->GetRoomOrigin().Y + SplitPoint * MeshHeight, 0);
-
-	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), RoomToSplit->GetRoomOrigin(),150, 12, FLinearColor::Blue, 100, 1);
-	UKismetSystemLibrary::DrawDebugSphere(GetWorld(), UpOrigin,150, 12, FLinearColor::Blue, 100, 1);
+	const FVector UpOrigin = FVector(RoomToSplit->GetRoomOrigin().X, RoomToSplit->GetRoomOrigin().Y + RoomTrim + SplitPoint * MeshHeight, 0);
 
 	BinaryRoom* LeftLeaf  = new BinaryRoom(RoomToSplit->GetRoomWidth(), SplitPoint, RoomToSplit->GetRoomOrigin());
 	BinaryRoom* RightLeaf = new BinaryRoom(RoomToSplit->GetRoomWidth(), RoomToSplit->GetRoomHeight() - SplitPoint, UpOrigin);
-	
-	// Add LeftLeaf and RightLeaf if they don't exist in BinaryRooms
-	if (!BinaryRooms.Contains(LeftLeaf))
-		BinaryRooms.Add(LeftLeaf);
-	if (!BinaryRooms.Contains(RightLeaf))
-		BinaryRooms.Add(RightLeaf);
-
-	// Set LeftLeaf and RightLeaf as children of RoomToSplit if they are not already
-	if (!RoomToSplit->HasLeftLeaf())
-		RoomToSplit->SetLeftLeaf(LeftLeaf);
-	if (!RoomToSplit->HasRightLeaf())
-		RoomToSplit->SetRightLeaf(RightLeaf);
-
-	// Set RoomToSplit as the parent of LeftLeaf and RightLeaf if they don't have one
-	if (!LeftLeaf->HasParent())
-		LeftLeaf->SetParent(RoomToSplit);
-	if (!RightLeaf->HasParent())
-		RightLeaf->SetParent(RoomToSplit);
 
 	// Add LeftLeaf and RightLeaf to RoomSplitQueue
-	RoomSplitQueue.Add(LeftLeaf);
-	RoomSplitQueue.Add(RightLeaf);
+	RoomsQueue.Enqueue(LeftLeaf);
+	RoomsQueue.Enqueue(RightLeaf);
 }
 
 // Called every frame
