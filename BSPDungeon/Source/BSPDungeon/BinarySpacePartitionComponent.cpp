@@ -23,7 +23,7 @@ UBinarySpacePartitionComponent::UBinarySpacePartitionComponent()
 	GridOrigin = this->GetComponentLocation();
 
 	// Dynamically load the Static Mesh used for the floor at construction.
-	GridMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Game/Art/Debug/SM_GridOutliner"));
+	GridMesh = LoadObject<UStaticMesh>(nullptr, TEXT("/Game/Art/SM_Pavement_1"));
 
 	// Safety check ensuring FloorMesh is set before running the next lines of code.
 	if (GridMesh != nullptr)
@@ -46,52 +46,68 @@ void UBinarySpacePartitionComponent::BeginPlay()
 	// Clear Previous Instances.
 	ClearMeshInstance(GridMeshInstance);
 
+	// Recursively split a grid into smaller grids to make up rooms for the dungeon.
 	BSPSplit();
 }
 
 void UBinarySpacePartitionComponent::BSPSplit()
 {
-	// Create the Initial Binary Room using dungeon parameters for GridRows, GridColumns, and GridOrigin
+	// Create the Initial Binary Room using dungeon parameters for GridRows, GridColumns, and GridOrigin.
 	InitialBinaryRoom = new BinaryRoom(GridRows, GridColumns, GridOrigin);
 
-	// Queue of rooms that still need to be split
+	// Queue of rooms that still need to be split.
 	TQueue<BinaryRoom*> RoomSplitQueue;
-	// Array of rooms after they can no longer be split
+	// Array of rooms after they can no longer be split.
 	TArray<BinaryRoom*> BinaryRooms;
 	
 	// Add the Initial Binary Room to the array of binary rooms and RoomSplitQueue.
 	RoomSplitQueue.Enqueue(InitialBinaryRoom);
 
+	// Iterate over RoomSplitQueue until the splitting process is complete or the maximum number of rooms is reached.
 	while (!RoomSplitQueue.IsEmpty())
 	{
+		// The current room being processed.
 		BinaryRoom* Room;
+		// Remove next room from the RoomSplitQueue and store as variable Room.
 		RoomSplitQueue.Dequeue(Room);
 
+		// Check if the maximum number of rooms has been reached.
+		if (BinaryRooms.Num() >= MaxRooms)
+			break;
+
+		// Check if the room can still be split based on its Width and Height.
 		if (Room->GetRoomWidth() >= MinRoomSizeX && Room->GetRoomHeight() >= MinRoomSizeY)
 		{
-			// Randomly split horizontally or vertically
+			// Randomly decide whether to split horizontally or vertically.
 			const auto RandomValue = static_cast<double>(rand()) / RAND_MAX;
 			if (RandomValue < 0.5)
 			{
+				// Check if the room can be split horizontally.
 				if (Room->GetRoomHeight() >= MinRoomSizeY * 2)
 					HorizontalSplit(Room, RoomSplitQueue);
+				// Check if the room can be split vertically.
 				else if (Room->GetRoomWidth() >= MinRoomSizeX * 2)
 					VerticalSplit(Room, RoomSplitQueue);
+				// If the room cannot be split further, add it to the array of final binary rooms.
 				else
 					BinaryRooms.Add(Room);
 			}
 			else
 			{
+				// Check if the room can be split vertically.
 				if (Room->GetRoomWidth() >= MinRoomSizeX * 2)
 					VerticalSplit(Room, RoomSplitQueue);
+				// Check if the room can be split horizontally.
 				else if (Room->GetRoomHeight() >= MinRoomSizeY * 2)
 					HorizontalSplit(Room, RoomSplitQueue);
+				// If the room cannot be split further, add it to the array of final binary rooms.
 				else
 					BinaryRooms.Add(Room);
 			}
 		}
 	}
 
+	// Draw the final set of binary rooms.
 	DrawInstancedMesh(BinaryRooms);
 }
 
@@ -104,9 +120,9 @@ void UBinarySpacePartitionComponent::DrawInstancedMesh(TArray<BinaryRoom*>& Bina
 		const BinaryRoom* Room = BinaryRoomsArray[Index];		
 
 		// Iterate through each cell of the room using rows and columns.
-		for (int i = RoomTrim; i < Room->GetRoomWidth() - RoomTrim; i++)
+		for (int i = RoomTrim; i <= Room->GetRoomWidth() - RoomTrim; i++)
 		{
-			for (int j = RoomTrim; j < Room->GetRoomHeight() - RoomTrim; j++)
+			for (int j = RoomTrim; j <= Room->GetRoomHeight() - RoomTrim; j++)
 			{
 				// Calculate the spawn position of the static mesh instance within the room.
 				// The position is determined based on the room's origin, mesh width, height, and iteration indices.
@@ -129,14 +145,15 @@ void UBinarySpacePartitionComponent::DrawInstancedMesh(TArray<BinaryRoom*>& Bina
 	}
 }
 
-void UBinarySpacePartitionComponent::VerticalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue)
+void UBinarySpacePartitionComponent::VerticalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue) const
 {
-	UE_LOG(LogTemp, Warning, TEXT("Vertical Split"));
-	
+	// Determine the point at which the room will be split vertically.
 	const int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinRoomSizeX, RoomToSplit->GetRoomWidth() - MinRoomSizeX);
-	
+
+	// Calculate the origin of the right leaf after the split.
 	const FVector RightOrigin = FVector(RoomToSplit->GetRoomOrigin().X + (RoomTrim + SplitPoint) * MeshWidth , RoomToSplit->GetRoomOrigin().Y, 0);
-	
+
+	// Create new binary rooms representing the left and right leaf resulting from the split.
 	BinaryRoom* LeftLeaf  = new BinaryRoom(SplitPoint, RoomToSplit->GetRoomHeight(), RoomToSplit->GetRoomOrigin());
 	BinaryRoom* RightLeaf = new BinaryRoom(RoomToSplit->GetRoomWidth() - SplitPoint, RoomToSplit->GetRoomHeight(), RightOrigin);
 
@@ -145,14 +162,15 @@ void UBinarySpacePartitionComponent::VerticalSplit(const BinaryRoom* RoomToSplit
 	RoomsQueue.Enqueue(RightLeaf);
 }
 
-void UBinarySpacePartitionComponent::HorizontalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue)
+void UBinarySpacePartitionComponent::HorizontalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue) const
 {
-	UE_LOG(LogTemp, Warning, TEXT("Horixontal Split"));
-	
+	// Determine the point at which the room will be split horizontally.
 	const int SplitPoint = UKismetMathLibrary::RandomIntegerInRange(MinRoomSizeY, RoomToSplit->GetRoomHeight() - MinRoomSizeY);
-	
+
+	// Calculate the origin of the right leaf after the split.
 	const FVector UpOrigin = FVector(RoomToSplit->GetRoomOrigin().X, RoomToSplit->GetRoomOrigin().Y + RoomTrim + SplitPoint * MeshHeight, 0);
 
+	// Create new binary rooms representing the left and right leaf resulting from the split.
 	BinaryRoom* LeftLeaf  = new BinaryRoom(RoomToSplit->GetRoomWidth(), SplitPoint, RoomToSplit->GetRoomOrigin());
 	BinaryRoom* RightLeaf = new BinaryRoom(RoomToSplit->GetRoomWidth(), RoomToSplit->GetRoomHeight() - SplitPoint, UpOrigin);
 

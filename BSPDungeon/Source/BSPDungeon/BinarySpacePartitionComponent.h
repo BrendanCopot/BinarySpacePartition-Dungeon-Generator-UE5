@@ -19,10 +19,10 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	/** GRID VARIABLES **/
 	// The number of rows the grid will generate.
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
-	int GridRows = 30;
+	int GridRows = 50;
 	// The number of columns the grid will generate.
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
-	int GridColumns = 35;
+	int GridColumns = 40;
 	// The number of layers the grid will generate
 	UPROPERTY(EditAnywhere, Category = "Grid Variables", meta=(AllowPrivateAccess = "true"))
 	int GridLayers = 1;
@@ -64,30 +64,30 @@ class BSPDUNGEON_API UBinarySpacePartitionComponent : public USceneComponent
 	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
 	int MinRoomSizeY = 6 + RoomTrim;
 	UPROPERTY(EditAnywhere, Category = "BSP Variables", meta=(AllowPrivateAccess = "true"))
-	int MaxRooms = 500;
+	int MaxRooms = 10;
 	
 	BinaryRoom* InitialBinaryRoom;
 	
 	/** FUNCTIONS **/
-	// Clears the mesh instance of all previous mesh instances
+	// Clears the mesh instance of all previous mesh instances.
 	static void ClearMeshInstance(UHierarchicalInstancedStaticMeshComponent* MeshInstance);
 
 public:	
-	// Sets default values for this component's properties
+	// Sets default values for this component's properties.
 	UBinarySpacePartitionComponent();
 
 protected:
-	// Called when the game starts
+	// Called when the game starts.
 	virtual void BeginPlay() override;
 
 	void BSPSplit();
 	void DrawInstancedMesh(TArray<BinaryRoom*>& BinaryRoomsArray);
 
-	void VerticalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue);
+	void VerticalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue) const;
 
-	void HorizontalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue);
+	void HorizontalSplit(const BinaryRoom* RoomToSplit, TQueue<BinaryRoom*>& RoomsQueue) const;
 
 public:	
-	// Called every frame
+	// Called every frame.
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;		
 };
