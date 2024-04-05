@@ -13,6 +13,17 @@ class FDungeonRoom
 	// The amount or rows and columns trimmed from the outer cells of the room.
 	int RoomTrim;
 
+	TArray<FVector> FloorPositions;
+
+	TArray<FVector> NorthWallPositions;
+	TArray<FVector> SouthWallPositions;
+	TArray<FVector> EastWallPositions;
+	TArray<FVector> WestWallPositions;
+
+protected:
+	
+	
+
 public:
 	FDungeonRoom(int Rows, int Cols, int Trim, FVector Origin);
 	~FDungeonRoom();
@@ -23,4 +34,6 @@ public:
 	int GetRoomHeight()	const { return RoomCols; }
 	// Returns the location in world space of the current room
 	FVector GetRoomOrigin() const { return RoomOrigin; }
+
+	void DrawFloorInstancedMesh(int MeshWidth, int MeshHeight, int MeshScale, UHierarchicalInstancedStaticMeshComponent* MeshInstance) const;
 };

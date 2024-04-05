@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "DungeonGenerator.generated.h"
 
+class FBSPAlgorithms;
 class FDungeonRoom;
 class UHierarchicalInstancedStaticMeshComponent;
 
@@ -46,6 +47,8 @@ class BSPDUNGEON_API ADungeonGenerator : public AActor
 	// Variables storing the static mesh we are instancing
 	UPROPERTY(EditDefaultsOnly, Category = "Instanced Mesh Variables", meta=(AllowPrivateAccess = "true"))
 	UStaticMesh* FloorMesh;
+
+	FBSPAlgorithms* BSPAlgorithmsReference;
 	
 public:	
 	// Sets default values for this actor's properties
@@ -54,16 +57,9 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-
-	void BSPSplit();
-	void VerticalSplit(const FDungeonRoom* RoomToSplit, TQueue<FDungeonRoom*>& RoomsQueue) const;
-	void HorizontalSplit(const FDungeonRoom* RoomToSplit, TQueue<FDungeonRoom*>& RoomsQueue) const;
 	
 	// Clears the mesh instance of all previous mesh instances.
 	static void ClearMeshInstance(UHierarchicalInstancedStaticMeshComponent* MeshInstance);
-	void DrawInstancedMesh(TArray<FDungeonRoom*>& BinaryRoomsArray);
-
-
 
 public:	
 	// Called every frame
@@ -71,7 +67,6 @@ public:
 
 	static int GetMeshWidth(const UStaticMesh* Mesh, const int MeshScale)  {return Mesh->GetBoundingBox().GetSize().X * MeshScale; }
 	static int GetMeshHeight(const UStaticMesh* Mesh, const int MeshScale) {return Mesh->GetBoundingBox().GetSize().Y * MeshScale; }
-
 };
 
 
