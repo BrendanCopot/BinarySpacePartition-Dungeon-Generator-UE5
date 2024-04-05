@@ -1,17 +1,21 @@
 ﻿#pragma once
 
-class BinaryRoom
+class UHierarchicalInstancedStaticMeshComponent;
+
+class FDungeonRoom
 {
-	// The current room's width
+	// The number of rows used to make the room.
 	int RoomRows;
-	// The current room's height
+	// The number of columns used to make the room.
 	int RoomCols;
-	// The location in world space of the current room
+	// The location in world space of the room.
 	FVector RoomOrigin;
-	
+	// The amount or rows and columns trimmed from the outer cells of the room.
+	int RoomTrim;
+
 public:
-	BinaryRoom(int Rows, int Cols, FVector Origin);
-	~BinaryRoom();
+	FDungeonRoom(int Rows, int Cols, int Trim, FVector Origin);
+	~FDungeonRoom();
 
 	// Returns the width of the current room as number of rows
 	int GetRoomWidth()	const { return RoomRows; }
